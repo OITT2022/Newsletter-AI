@@ -56,13 +56,22 @@ async function searchTopic(topic, apiKey) {
 }
 
 function formatResearch(results) {
-  return results
-    .map((r, i) => `Source ${i + 1}: ${r.title}\nURL: ${r.url}\nContent: ${r.content}`)
-    .join("\n\n");
+  // Limit total research text to ~5000 chars to stay within API rate limits
+  const maxTotal = 5000;
+  let total = 0;
+  const lines = [];
+  for (let i = 0; i < results.length && total < maxTotal; i++) {
+    const r = results[i];
+    const contentSlice = r.content.slice(0, Math.min(800, maxTotal - total));
+    const line = `Source ${i + 1}: ${r.title}\nURL: ${r.url}\nContent: ${contentSlice}`;
+    lines.push(line);
+    total += line.length;
+  }
+  return lines.join("\n\n");
 }
 
 // ── Anthropic API ──────────────────────────────────────────────────────────
-async function callClaude(systemPrompt, userPrompt, apiKey, maxTokens = 4096) {
+async function callClaude(systemPrompt, userPrompt, apiKey, maxTokens = 2048, model = "claude-haiku-4-5-20251001") {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -71,7 +80,7 @@ async function callClaude(systemPrompt, userPrompt, apiKey, maxTokens = 4096) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model,
       max_tokens: maxTokens,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
@@ -123,7 +132,7 @@ async function generateContent(topic, research, apiKey) {
 
 async function checkHebrew(content, apiKey) {
   const sys = `You are a Hebrew language expert. Review the newsletter JSON below for grammar, spelling, phrasing, and readability. Return corrected JSON with the EXACT same structure. Fix any issues but preserve meaning. Output ONLY valid JSON, no explanation.`;
-  const text = await callClaude(sys, JSON.stringify(content, null, 2), apiKey, 8192);
+  const text = await callClaude(sys, JSON.stringify(content, null, 2), apiKey, 2048);
   try { return JSON.parse(text); } catch { return content; }
 }
 
