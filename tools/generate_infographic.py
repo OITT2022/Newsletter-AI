@@ -35,14 +35,25 @@ def generate_infographic(prompt: str, output_path: str, style: str = "modern") -
 
     client = genai.Client(api_key=api_key)
 
+    import re
+    has_hebrew = bool(re.search(r'[\u0590-\u05FF]', prompt))
+
+    hebrew_rules = (
+        "\n\nCRITICAL HEBREW TEXT RULES:"
+        "\n- Any Hebrew text MUST be written RIGHT-TO-LEFT (RTL). This is the #1 priority."
+        "\n- Hebrew reads from RIGHT to LEFT. The first letter of a word appears on the RIGHT side."
+        "\n- Example: The word 'שלום' starts with 'ש' on the right, then 'ל', 'ו', 'ם' going left."
+        "\n- DO NOT mirror or reverse Hebrew letters. Each letter must face its correct direction."
+        "\n- If you cannot render Hebrew correctly, use NUMBERS and ICONS instead of Hebrew text."
+        "\n- Prefer minimal text — use icons, arrows, and visual elements over words."
+    ) if has_hebrew else ""
+
     full_prompt = (
         f"Create a clean, professional infographic in a {style} style. "
-        f"White or light background. Accurate and legible text. "
-        f"Newsletter-ready, high quality, no watermarks. "
+        f"White or light background. Newsletter-ready, high quality, no watermarks. "
         f"Aspect ratio suitable for email newsletter (roughly 560px wide). "
-        f"IMPORTANT: All text in the infographic must be in the same language as the prompt below. "
-        f"If the prompt is in Hebrew, all labels, titles, and text in the image must be in Hebrew with right-to-left layout. "
-        f"If the prompt is in English, use English. Match the language exactly."
+        f"Prefer ICONS, NUMBERS, and VISUAL ELEMENTS over text. Keep any text extremely short (1-3 words max per label)."
+        f"{hebrew_rules}"
         f"\n\nContent: {prompt}"
     )
 

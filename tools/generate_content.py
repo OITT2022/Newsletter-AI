@@ -39,7 +39,12 @@ Rules:
 - Extract concrete numbers and statistics whenever available
 - Subject lines must be under 50 characters
 - Preview text must be under 100 characters and complement (not repeat) the subject line
-- Suggest 2-3 infographic prompts that would visually enhance the content (for AI image generation — write these prompts in the SAME LANGUAGE as the newsletter content, so that any text rendered in the infographic matches the newsletter language)
+- Suggest 2-3 infographic prompts that would visually enhance the content
+- CRITICAL: Write infographic prompts ALWAYS IN ENGLISH, even if the newsletter is in Hebrew or another language
+- In each infographic prompt, specify the exact text strings that should appear in the image, translated into the newsletter language
+- For Hebrew text in infographics, wrap each Hebrew string with [RTL: ...] tags, e.g. [RTL: טיפים לגינון]
+- Prefer infographics that use icons, numbers, and minimal text to avoid RTL rendering issues
+- Keep text in infographics SHORT — single words or 2-3 word phrases maximum
 
 Output ONLY valid JSON matching the schema below. No markdown, no code fences, no explanation."""
 

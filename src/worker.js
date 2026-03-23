@@ -113,7 +113,12 @@ Rules:
 - Extract concrete numbers and statistics whenever available
 - Subject lines must be under 50 characters
 - Preview text must be under 100 characters and complement (not repeat) the subject line
-- Suggest 1-2 infographic prompts that would visually enhance the content (write these prompts in the SAME LANGUAGE as the newsletter content, so that any text rendered in the infographic matches the newsletter language)
+- Suggest 1-2 infographic prompts that would visually enhance the content
+- CRITICAL: Write infographic prompts ALWAYS IN ENGLISH, even if the newsletter is in Hebrew or another language
+- In each infographic prompt, specify the exact text strings that should appear in the image, translated into the newsletter language
+- For Hebrew text in infographics, wrap each Hebrew string with [RTL: ...] tags, e.g. [RTL: טיפים לגינון]
+- Prefer infographics that use icons, numbers, and minimal text to avoid RTL rendering issues
+- Keep text in infographics SHORT — single words or 2-3 word phrases maximum
 
 Output ONLY valid JSON matching the schema below. No markdown, no code fences, no explanation.`;
 
@@ -180,14 +185,28 @@ ${images.map((b64, i) => `<tr><td style="padding:20px 40px;text-align:center;"><
 }
 
 // ── Gemini Infographic Generation (Nano Banana 2) ──────────────────────────
+function hasHebrew(text) {
+  return /[\u0590-\u05FF]/.test(text);
+}
+
 async function generateInfographic(prompt, apiKey) {
+  const hebrewInstructions = hasHebrew(prompt)
+    ? "\n\nCRITICAL HEBREW TEXT RULES:" +
+      "\n- Any Hebrew text MUST be written RIGHT-TO-LEFT (RTL). This is the #1 priority." +
+      "\n- Hebrew reads from RIGHT to LEFT. The first letter of a word appears on the RIGHT side." +
+      "\n- Example: The word 'שלום' starts with 'ש' on the right, then 'ל', 'ו', 'ם' going left." +
+      "\n- DO NOT mirror or reverse Hebrew letters. Each letter must face its correct direction." +
+      "\n- If you cannot render Hebrew correctly, use NUMBERS and ICONS instead of Hebrew text." +
+      "\n- Prefer minimal text — use icons, arrows, and visual elements over words." +
+      "\n- Test: The word 'ישראל' must start with 'י' on the RIGHT side of the word."
+    : "";
+
   const fullPrompt =
     "Create a clean, professional infographic in a modern style. " +
-    "White or light background. Accurate and legible text. " +
-    "Newsletter-ready, high quality, no watermarks. " +
+    "White or light background. Newsletter-ready, high quality, no watermarks. " +
     "Aspect ratio suitable for email newsletter (roughly 560px wide). " +
-    "IMPORTANT: All text in the infographic must be in the same language as the prompt below. " +
-    "If the prompt is in Hebrew, all labels, titles, and text in the image must be in Hebrew with right-to-left layout. " +
+    "Prefer ICONS, NUMBERS, and VISUAL ELEMENTS over text. Keep any text extremely short (1-3 words max per label)." +
+    hebrewInstructions +
     "\n\nContent: " + prompt;
 
   const res = await fetch(
