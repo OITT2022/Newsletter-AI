@@ -113,12 +113,10 @@ Rules:
 - Extract concrete numbers and statistics whenever available
 - Subject lines must be under 50 characters
 - Preview text must be under 100 characters and complement (not repeat) the subject line
-- Suggest 1-2 infographic prompts that would visually enhance the content
-- CRITICAL: Write infographic prompts ALWAYS IN ENGLISH, even if the newsletter is in Hebrew or another language
-- In each infographic prompt, specify the exact text strings that should appear in the image, translated into the newsletter language
-- For Hebrew text in infographics, wrap each Hebrew string with [RTL: ...] tags, e.g. [RTL: טיפים לגינון]
-- Prefer infographics that use icons, numbers, and minimal text to avoid RTL rendering issues
-- Keep text in infographics SHORT — single words or 2-3 word phrases maximum
+- For each section with a key_stat, create a "visual" object with: title (Hebrew), value (number/percentage), subtitle (Hebrew, short)
+- Suggest 1 infographic prompt IN ENGLISH describing an illustration/photo (NOT text-based) that enhances the newsletter topic visually
+- The infographic must contain ZERO text — only visual imagery, icons, illustrations, or photos
+- Example infographic prompt: "A modern flat illustration of a green balcony garden with potted plants, herbs, and flowers in morning sunlight, clean minimal style"
 
 Output ONLY valid JSON matching the schema below. No markdown, no code fences, no explanation.`;
 
@@ -128,7 +126,8 @@ const SCHEMA = `{
   "hero_summary": "2-3 sentence hook",
   "sections": [{"headline":"...","body":"under 150 words","source_url":"https://...","source_title":"...","key_stat":"... or null"}],
   "closing": "Forward-looking takeaway",
-  "infographic_prompts": ["Detailed description of an infographic to generate (in the newsletter language)"]
+  "visuals": [{"title":"Hebrew title","value":"85%","subtitle":"Hebrew subtitle"}],
+  "infographic_prompts": ["English-only prompt for a text-free illustration/photo"]
 }`;
 
 async function generateContent(topic, research, apiKey) {
@@ -175,7 +174,18 @@ function renderNewsletter(content, topic, images = []) {
 <p style="font-size:16px;line-height:1.8;color:#4a4a68;margin:0;">${esc(content.hero_summary||"")}</p>
 </td></tr>
 ${sections}
-${images.map((b64, i) => `<tr><td style="padding:20px 40px;text-align:center;"><img src="data:image/png;base64,${b64}" alt="Infographic ${i+1}" style="max-width:100%;height:auto;border-radius:6px;"></td></tr>`).join("\n")}
+${(content.visuals || []).length > 0 ? `<tr><td style="padding:30px 40px;">
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr>
+  ${(content.visuals || []).map(v => `<td style="width:${Math.floor(100/(content.visuals||[]).length)}%;text-align:center;padding:12px;">
+    <div style="background:linear-gradient(135deg,#6c63ff,#5a52e0);border-radius:12px;padding:24px 16px;">
+      <p style="font-size:32px;font-weight:800;color:#fff;margin:0;line-height:1.2;font-family:Arial,'Arial Hebrew',sans-serif;">${esc(v.value||"")}</p>
+      <p style="font-size:14px;color:rgba(255,255,255,0.9);margin:8px 0 0;font-family:Arial,'Arial Hebrew',sans-serif;">${esc(v.title||"")}</p>
+      ${v.subtitle ? `<p style="font-size:12px;color:rgba(255,255,255,0.7);margin:4px 0 0;font-family:Arial,'Arial Hebrew',sans-serif;">${esc(v.subtitle)}</p>` : ""}
+    </div>
+  </td>`).join("")}
+  </tr></table>
+</td></tr>` : ""}
+${images.map((b64, i) => `<tr><td style="padding:20px 40px;text-align:center;"><img src="data:image/png;base64,${b64}" alt="Illustration ${i+1}" style="max-width:100%;height:auto;border-radius:12px;"></td></tr>`).join("\n")}
 <tr><td class="sec" style="padding:30px 40px;background:#fafafc;text-align:right;font-family:Arial,'Arial Hebrew',sans-serif;">
 <p style="font-size:16px;line-height:1.8;color:#4a4a68;margin:0;">${esc(content.closing||"")}</p></td></tr>
 <tr><td style="padding:30px 40px;background:#1a1a2e;text-align:center;font-family:Arial,'Arial Hebrew',sans-serif;">
@@ -185,29 +195,14 @@ ${images.map((b64, i) => `<tr><td style="padding:20px 40px;text-align:center;"><
 }
 
 // ── Gemini Infographic Generation (Nano Banana 2) ──────────────────────────
-function hasHebrew(text) {
-  return /[\u0590-\u05FF]/.test(text);
-}
-
 async function generateInfographic(prompt, apiKey) {
-  const hebrewInstructions = hasHebrew(prompt)
-    ? "\n\nCRITICAL HEBREW TEXT RULES:" +
-      "\n- Any Hebrew text MUST be written RIGHT-TO-LEFT (RTL). This is the #1 priority." +
-      "\n- Hebrew reads from RIGHT to LEFT. The first letter of a word appears on the RIGHT side." +
-      "\n- Example: The word 'שלום' starts with 'ש' on the right, then 'ל', 'ו', 'ם' going left." +
-      "\n- DO NOT mirror or reverse Hebrew letters. Each letter must face its correct direction." +
-      "\n- If you cannot render Hebrew correctly, use NUMBERS and ICONS instead of Hebrew text." +
-      "\n- Prefer minimal text — use icons, arrows, and visual elements over words." +
-      "\n- Test: The word 'ישראל' must start with 'י' on the RIGHT side of the word."
-    : "";
-
   const fullPrompt =
-    "Create a clean, professional infographic in a modern style. " +
-    "White or light background. Newsletter-ready, high quality, no watermarks. " +
-    "Aspect ratio suitable for email newsletter (roughly 560px wide). " +
-    "Prefer ICONS, NUMBERS, and VISUAL ELEMENTS over text. Keep any text extremely short (1-3 words max per label)." +
-    hebrewInstructions +
-    "\n\nContent: " + prompt;
+    "Generate a beautiful, professional illustration or photo-realistic image. " +
+    "CRITICAL: The image must contain ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO NUMBERS, NO LABELS. " +
+    "Only visual elements: illustrations, icons, photos, patterns, gradients. " +
+    "Clean modern style, white or light background, high quality, no watermarks. " +
+    "Aspect ratio suitable for email newsletter (roughly 560px wide, 300px tall). " +
+    "\n\nSubject: " + prompt;
 
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${apiKey}`,

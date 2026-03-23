@@ -35,26 +35,13 @@ def generate_infographic(prompt: str, output_path: str, style: str = "modern") -
 
     client = genai.Client(api_key=api_key)
 
-    import re
-    has_hebrew = bool(re.search(r'[\u0590-\u05FF]', prompt))
-
-    hebrew_rules = (
-        "\n\nCRITICAL HEBREW TEXT RULES:"
-        "\n- Any Hebrew text MUST be written RIGHT-TO-LEFT (RTL). This is the #1 priority."
-        "\n- Hebrew reads from RIGHT to LEFT. The first letter of a word appears on the RIGHT side."
-        "\n- Example: The word 'שלום' starts with 'ש' on the right, then 'ל', 'ו', 'ם' going left."
-        "\n- DO NOT mirror or reverse Hebrew letters. Each letter must face its correct direction."
-        "\n- If you cannot render Hebrew correctly, use NUMBERS and ICONS instead of Hebrew text."
-        "\n- Prefer minimal text — use icons, arrows, and visual elements over words."
-    ) if has_hebrew else ""
-
     full_prompt = (
-        f"Create a clean, professional infographic in a {style} style. "
-        f"White or light background. Newsletter-ready, high quality, no watermarks. "
-        f"Aspect ratio suitable for email newsletter (roughly 560px wide). "
-        f"Prefer ICONS, NUMBERS, and VISUAL ELEMENTS over text. Keep any text extremely short (1-3 words max per label)."
-        f"{hebrew_rules}"
-        f"\n\nContent: {prompt}"
+        f"Generate a beautiful, professional illustration or photo-realistic image in a {style} style. "
+        f"CRITICAL: The image must contain ABSOLUTELY NO TEXT, NO LETTERS, NO WORDS, NO NUMBERS, NO LABELS. "
+        f"Only visual elements: illustrations, icons, photos, patterns, gradients. "
+        f"Clean modern style, white or light background, high quality, no watermarks. "
+        f"Aspect ratio suitable for email newsletter (roughly 560px wide, 300px tall). "
+        f"\n\nSubject: {prompt}"
     )
 
     response = client.models.generate_content(

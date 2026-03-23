@@ -129,9 +129,10 @@ Content files (search_results.json, newsletter_content.json) are overwritten aut
 - The HTML template uses `dir="rtl"` and `lang="he"` for proper right-to-left rendering
 - All fonts are set to Arial (with Arial Hebrew fallback) for consistent Hebrew display
 - `stat-callout` uses `border-right` instead of `border-left` to align with RTL layout
-- Infographic prompts are generated in the same language as the newsletter content, so that text rendered in infographics matches the newsletter language
+- Infographic prompts are written in ENGLISH and request TEXT-FREE illustrations only (AI image models cannot render Hebrew/RTL correctly)
+- Hebrew data visualization (stats, numbers) is done via HTML/CSS stat cards — never via AI-generated images
 - Footer text is in Hebrew (unsubscribe, view in browser)
 - Source links show "קראו עוד" instead of "Read more"
 
 ## Lessons Learned
-_(Agent updates this section as issues are discovered during runs)_
+- **AI image models cannot render Hebrew correctly** — Gemini, DALL-E, and others reverse RTL text. Solution: generate text-free illustrations only, and use HTML/CSS for any text overlays with correct RTL rendering.
