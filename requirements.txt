@@ -1,0 +1,13 @@
+tavily-python
+trafilatura
+anthropic
+google-generativeai
+jinja2
+premailer
+matplotlib
+Pillow
+python-dotenv
+google-api-python-client
+google-auth-oauthlib
+google-auth-httplib2
+flask

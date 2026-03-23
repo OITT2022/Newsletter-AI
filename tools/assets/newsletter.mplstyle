@@ -1,0 +1,23 @@
+# Newsletter AI - Matplotlib Style
+figure.facecolor: ffffff
+figure.figsize: 8, 5
+
+axes.facecolor: ffffff
+axes.edgecolor: 9999b3
+axes.labelcolor: 1a1a2e
+axes.prop_cycle: cycler('color', ['6c63ff', 'ff6584', '43b88c', 'f5a623', '4a90d9'])
+axes.grid: True
+axes.spines.top: False
+axes.spines.right: False
+
+grid.color: e8e8ed
+grid.alpha: 0.7
+grid.linestyle: --
+
+text.color: 1a1a2e
+font.family: sans-serif
+font.sans-serif: Arial, Arial Hebrew, sans-serif
+font.size: 12
+
+xtick.color: 1a1a2e
+ytick.color: 1a1a2e

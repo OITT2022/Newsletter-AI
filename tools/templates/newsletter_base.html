@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{{ subject_line }}</title>
+    <style>
+        /* Reset */
+        body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+        body { margin: 0; padding: 0; width: 100% !important; height: 100% !important; background-color: #f4f4f7; direction: rtl; }
+
+        /* Base styles */
+        .email-wrapper { width: 100%; background-color: #f4f4f7; padding: 40px 0; }
+        .email-container { max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+        /* Header */
+        .header { background-color: #1a1a2e; padding: 30px 40px; text-align: center; }
+        .header img { max-height: 50px; width: auto; }
+        .header-text { color: #ffffff; font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 14px; letter-spacing: 2px; text-transform: uppercase; margin-top: 10px; }
+
+        /* Hero */
+        .hero { padding: 40px 40px 20px 40px; border-bottom: 3px solid #e8e8ed; text-align: right; }
+        .hero h1 { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 24px; line-height: 1.5; color: #1a1a2e; margin: 0 0 16px 0; font-weight: 700; }
+        .hero p { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 16px; line-height: 1.8; color: #4a4a68; margin: 0; }
+
+        /* Content sections */
+        .section { padding: 30px 40px; border-bottom: 1px solid #e8e8ed; text-align: right; }
+        .section:last-of-type { border-bottom: none; }
+        .section h2 { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 20px; line-height: 1.4; color: #1a1a2e; margin: 0 0 12px 0; font-weight: 700; }
+        .section p { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 16px; line-height: 1.8; color: #4a4a68; margin: 0 0 12px 0; }
+        .section .source-link { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 14px; color: #6c63ff; text-decoration: none; font-weight: 600; }
+        .section .source-link:hover { text-decoration: underline; }
+
+        /* Key stat callout */
+        .stat-callout { background-color: #f0efff; border-right: 4px solid #6c63ff; border-left: none; padding: 16px 20px; margin: 16px 0; border-radius: 6px 0 0 6px; text-align: right; }
+        .stat-callout p { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 18px; font-weight: 700; color: #1a1a2e; margin: 0; line-height: 1.5; }
+
+        /* Infographic */
+        .infographic { padding: 20px 40px; text-align: center; }
+        .infographic img { max-width: 100%; height: auto; border-radius: 6px; }
+
+        /* Closing */
+        .closing { padding: 30px 40px; background-color: #fafafc; text-align: right; }
+        .closing p { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 16px; line-height: 1.8; color: #4a4a68; margin: 0; }
+
+        /* Footer */
+        .footer { padding: 30px 40px; background-color: #1a1a2e; text-align: center; }
+        .footer p { font-family: Arial, 'Arial Hebrew', sans-serif; font-size: 13px; color: #9999b3; margin: 0 0 8px 0; line-height: 1.6; }
+        .footer a { color: #9999b3; text-decoration: underline; }
+
+        /* Responsive */
+        @media only screen and (max-width: 620px) {
+            .email-container { width: 100% !important; border-radius: 0 !important; }
+            .header, .hero, .section, .infographic, .closing, .footer { padding-left: 20px !important; padding-right: 20px !important; }
+            .hero h1 { font-size: 20px !important; }
+            .section h2 { font-size: 18px !important; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Preview text (hidden) -->
+    <div style="display:none;font-size:1px;color:#f4f4f7;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden;">
+        {{ preview_text }}
+    </div>
+
+    <table class="email-wrapper" role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" dir="rtl">
+        <tr>
+            <td align="center">
+                <table class="email-container" role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" dir="rtl">
+
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            {% if logo_b64 %}
+                            <img src="data:image/png;base64,{{ logo_b64 }}" alt="Newsletter Logo">
+                            {% endif %}
+                            <div class="header-text">Newsletter</div>
+                        </td>
+                    </tr>
+
+                    <!-- Hero -->
+                    <tr>
+                        <td class="hero">
+                            <h1>{{ hero_summary[:80] }}{% if hero_summary|length > 80 %}...{% endif %}</h1>
+                            <p>{{ hero_summary }}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Content Sections -->
+                    {% for section in sections %}
+                    <tr>
+                        <td class="section">
+                            <h2>{{ section.headline }}</h2>
+                            <p>{{ section.body }}</p>
+                            {% if section.key_stat %}
+                            <div class="stat-callout">
+                                <p>{{ section.key_stat }}</p>
+                            </div>
+                            {% endif %}
+                            {% if section.source_url %}
+                            <a href="{{ section.source_url }}{{ utm_params }}" class="source-link">
+                                {% if section.source_title %}{{ section.source_title }} - {% endif %}קראו עוד &larr;
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Infographics -->
+                    {% for infographic_b64 in infographics %}
+                    <tr>
+                        <td class="infographic">
+                            <img src="data:image/png;base64,{{ infographic_b64 }}" alt="Infographic {{ loop.index }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Charts -->
+                    {% for chart_b64 in charts %}
+                    <tr>
+                        <td class="infographic">
+                            <img src="data:image/png;base64,{{ chart_b64 }}" alt="Chart {{ loop.index }}">
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Closing -->
+                    <tr>
+                        <td class="closing">
+                            <p>{{ closing }}</p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <p>קיבלת מייל זה כי נרשמת לניוזלטר שלנו.</p>
+                            <p><a href="[UNSUBSCRIBE_LINK]">הסרה מרשימת תפוצה</a> | <a href="[VIEW_IN_BROWSER_LINK]">צפייה בדפדפן</a></p>
+                            <p>[MAILING_ADDRESS]</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
