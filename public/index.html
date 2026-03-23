@@ -163,7 +163,8 @@
                     <div class="stage-item" data-stage="research"><span class="stage-icon">1</span><span>מחקר ואיסוף מידע</span></div>
                     <div class="stage-item" data-stage="content"><span class="stage-icon">2</span><span>יצירת תוכן</span></div>
                     <div class="stage-item" data-stage="hebrew"><span class="stage-icon">3</span><span>בדיקת איכות עברית</span></div>
-                    <div class="stage-item" data-stage="render"><span class="stage-icon">4</span><span>הרכבת הניוזלטר</span></div>
+                    <div class="stage-item" data-stage="visuals"><span class="stage-icon">4</span><span>יוצר מדיה וגרפים</span></div>
+                    <div class="stage-item" data-stage="render"><span class="stage-icon">5</span><span>הרכבת הניוזלטר</span></div>
                 </div>
             </div>
         </div>
@@ -201,8 +202,8 @@
         const toast = document.getElementById('toast');
 
         let generatedHtml = null;
-        const stageOrder = ['research','content','hebrew','render'];
-        const stageMap = { research:0, content:1, hebrew:2, render:3, done:4 };
+        const stageOrder = ['research','content','hebrew','visuals','render'];
+        const stageMap = { research:0, content:1, hebrew:2, visuals:3, render:4, done:5 };
 
         topicInput.addEventListener('input', () => { charCount.textContent = topicInput.value.length; });
 
@@ -232,7 +233,7 @@
                 else if (i === idx) el.classList.add('active');
             });
             if (stage === 'done') stageList.querySelectorAll('.stage-item').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
-            const pcts = { research: 20, content: 50, hebrew: 70, render: 90, done: 100 };
+            const pcts = { research: 15, content: 40, hebrew: 55, visuals: 75, render: 90, done: 100 };
             progressBar.style.width = (pcts[stage] || 0) + '%';
         }
 

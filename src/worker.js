@@ -6,7 +6,7 @@
  *   GET  /api/generate    → SSE streaming pipeline
  *
  * Environment variables (set in Cloudflare Dashboard):
- *   TAVILY_API_KEY, ANTHROPIC_API_KEY
+ *   TAVILY_API_KEY, ANTHROPIC_API_KEY, GOOGLE_API_KEY
  */
 
 // ── Tavily Search ──────────────────────────────────────────────────────────
@@ -113,6 +113,7 @@ Rules:
 - Extract concrete numbers and statistics whenever available
 - Subject lines must be under 50 characters
 - Preview text must be under 100 characters and complement (not repeat) the subject line
+- Suggest 1-2 infographic prompts that would visually enhance the content (write these prompts in the SAME LANGUAGE as the newsletter content, so that any text rendered in the infographic matches the newsletter language)
 
 Output ONLY valid JSON matching the schema below. No markdown, no code fences, no explanation.`;
 
@@ -121,7 +122,8 @@ const SCHEMA = `{
   "preview_text": "Under 100 chars",
   "hero_summary": "2-3 sentence hook",
   "sections": [{"headline":"...","body":"under 150 words","source_url":"https://...","source_title":"...","key_stat":"... or null"}],
-  "closing": "Forward-looking takeaway"
+  "closing": "Forward-looking takeaway",
+  "infographic_prompts": ["Detailed description of an infographic to generate (in the newsletter language)"]
 }`;
 
 async function generateContent(topic, research, apiKey) {
@@ -141,7 +143,7 @@ function esc(str) {
   return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function renderNewsletter(content, topic) {
+function renderNewsletter(content, topic, images = []) {
   const subj = (content.subject_lines || ["Newsletter"])[0];
   const slug = topic.toLowerCase().replace(/[^a-z0-9\u0590-\u05ff]+/g, "-").replace(/^-|-$/g, "");
   const utm = `?utm_source=newsletter&utm_medium=email&utm_campaign=${encodeURIComponent(slug)}`;
@@ -168,12 +170,49 @@ function renderNewsletter(content, topic) {
 <p style="font-size:16px;line-height:1.8;color:#4a4a68;margin:0;">${esc(content.hero_summary||"")}</p>
 </td></tr>
 ${sections}
+${images.map((b64, i) => `<tr><td style="padding:20px 40px;text-align:center;"><img src="data:image/png;base64,${b64}" alt="Infographic ${i+1}" style="max-width:100%;height:auto;border-radius:6px;"></td></tr>`).join("\n")}
 <tr><td class="sec" style="padding:30px 40px;background:#fafafc;text-align:right;font-family:Arial,'Arial Hebrew',sans-serif;">
 <p style="font-size:16px;line-height:1.8;color:#4a4a68;margin:0;">${esc(content.closing||"")}</p></td></tr>
 <tr><td style="padding:30px 40px;background:#1a1a2e;text-align:center;font-family:Arial,'Arial Hebrew',sans-serif;">
 <p style="font-size:13px;color:#9999b3;margin:0 0 8px;">קיבלת מייל זה כי נרשמת לניוזלטר שלנו.</p>
 <p style="font-size:13px;color:#9999b3;margin:0;"><a href="[UNSUBSCRIBE_LINK]" style="color:#9999b3;text-decoration:underline;">הסרה מרשימת תפוצה</a> | <a href="[VIEW_IN_BROWSER_LINK]" style="color:#9999b3;text-decoration:underline;">צפייה בדפדפן</a></p>
 </td></tr></table></td></tr></table></body></html>`;
+}
+
+// ── Gemini Infographic Generation (Nano Banana 2) ──────────────────────────
+async function generateInfographic(prompt, apiKey) {
+  const fullPrompt =
+    "Create a clean, professional infographic in a modern style. " +
+    "White or light background. Accurate and legible text. " +
+    "Newsletter-ready, high quality, no watermarks. " +
+    "Aspect ratio suitable for email newsletter (roughly 560px wide). " +
+    "IMPORTANT: All text in the infographic must be in the same language as the prompt below. " +
+    "If the prompt is in Hebrew, all labels, titles, and text in the image must be in Hebrew with right-to-left layout. " +
+    "\n\nContent: " + prompt;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: fullPrompt }] }],
+        generationConfig: { responseModalities: ["IMAGE", "TEXT"] },
+      }),
+    }
+  );
+
+  const data = await res.json();
+  if (data.error) return null;
+
+  // Extract base64 image from response
+  const parts = data.candidates?.[0]?.content?.parts || [];
+  for (const part of parts) {
+    if (part.inlineData) {
+      return part.inlineData.data; // base64 string
+    }
+  }
+  return null;
 }
 
 // ── Delay (respect rate limits) ─────────────────────────────────────────────
@@ -216,8 +255,20 @@ export default {
           await send("stage", "hebrew");
           content = await checkHebrew(content, env.ANTHROPIC_API_KEY);
 
+          // Step 4: Generate infographics via Gemini
+          const images = [];
+          if (env.GOOGLE_API_KEY && content.infographic_prompts?.length) {
+            await send("stage", "visuals");
+            for (const prompt of content.infographic_prompts.slice(0, 2)) {
+              try {
+                const img = await generateInfographic(prompt, env.GOOGLE_API_KEY);
+                if (img) images.push(img);
+              } catch (e) { /* Skip failed infographic, not a blocker */ }
+            }
+          }
+
           await send("stage", "render");
-          await send("result", renderNewsletter(content, topic));
+          await send("result", renderNewsletter(content, topic, images));
         } catch (e) {
           await send("error_msg", e.message || "שגיאה לא צפויה");
         } finally {
