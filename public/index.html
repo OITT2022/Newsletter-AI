@@ -7,114 +7,170 @@
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --bg: #0f0f1a; --surface: #1a1a2e; --surface-2: #22223a;
-            --border: #2d2d4a; --accent: #6c63ff; --accent-glow: rgba(108,99,255,0.35);
-            --accent-light: #8b83ff; --green: #2ecc71; --text: #e8e8f0;
-            --text-dim: #9999b3; --danger: #e74c3c; --radius: 14px;
+            --bg: #f5f6fa;
+            --surface: #ffffff;
+            --surface-2: #f0f1f5;
+            --border: #e2e4ed;
+            --accent: #6c63ff;
+            --accent-glow: rgba(108,99,255,0.18);
+            --accent-light: #6c63ff;
+            --green: #10b981;
+            --green-light: rgba(16,185,129,0.1);
+            --text: #1e1e2e;
+            --text-dim: #6b7280;
+            --danger: #ef4444;
+            --radius: 16px;
             --font: 'Segoe UI', Arial, 'Arial Hebrew', sans-serif;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.1);
         }
         body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
         .app { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr; height: 100vh; }
 
+        /* ── Top Bar ── */
         .topbar {
             grid-column: 1 / -1; background: var(--surface); border-bottom: 1px solid var(--border);
-            padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; z-index: 10;
+            padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; z-index: 10;
+            box-shadow: var(--shadow-sm);
         }
         .topbar-brand { display: flex; align-items: center; gap: 14px; }
         .topbar-logo {
-            width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 18px;
-            box-shadow: 0 0 20px var(--accent-glow);
+            width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #8b83ff); border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px; color: white; font-weight: 700;
+            box-shadow: 0 4px 12px var(--accent-glow);
         }
-        .topbar-title {
-            font-size: 20px; font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-light), var(--green));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-        .topbar-subtitle { font-size: 13px; color: var(--text-dim); }
+        .topbar-title { font-size: 20px; font-weight: 800; color: var(--text); }
+        .topbar-subtitle { font-size: 13px; color: var(--text-dim); margin-top: 1px; }
 
+        /* ── Right Panel (Input) ── */
         .panel-input {
             background: var(--bg); padding: 40px 36px; display: flex;
             flex-direction: column; overflow-y: auto; border-left: 1px solid var(--border);
         }
-        .panel-input h2 { font-size: 22px; margin-bottom: 8px; }
+        .panel-input h2 { font-size: 24px; margin-bottom: 6px; font-weight: 800; color: var(--text); }
         .panel-input .hint { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.7; }
 
         .input-group { position: relative; margin-bottom: 24px; }
-        .input-group label { display: block; font-size: 14px; font-weight: 600; color: var(--text-dim); margin-bottom: 10px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-dim); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
         textarea {
-            width: 100%; min-height: 160px; background: var(--surface); border: 2px solid var(--border);
+            width: 100%; min-height: 140px; background: var(--surface); border: 2px solid var(--border);
             border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 16px;
             line-height: 1.8; padding: 18px 20px; resize: vertical; transition: border-color 0.25s, box-shadow 0.25s; direction: rtl;
+            box-shadow: var(--shadow-sm);
         }
         textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
-        textarea::placeholder { color: var(--text-dim); opacity: 0.6; }
+        textarea::placeholder { color: #b0b5c3; }
         .char-count { position: absolute; bottom: 12px; left: 16px; font-size: 12px; color: var(--text-dim); }
 
-        .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+        /* ── Suggestion Chips ── */
+        .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
         .suggestion-chip {
-            background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px;
-            padding: 8px 16px; font-size: 13px; color: var(--text-dim); cursor: pointer; transition: all 0.2s;
+            background: var(--surface); border: 1px solid var(--border); border-radius: 24px;
+            padding: 8px 18px; font-size: 13px; color: var(--text-dim); cursor: pointer;
+            transition: all 0.2s; box-shadow: var(--shadow-sm); font-weight: 500;
         }
-        .suggestion-chip:hover { background: var(--accent); color: white; border-color: var(--accent); transform: translateY(-1px); }
+        .suggestion-chip:hover { background: var(--accent); color: white; border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 4px 12px var(--accent-glow); }
 
+        /* ── Generate Button ── */
         .btn-generate {
             width: 100%; padding: 18px; background: linear-gradient(135deg, var(--accent), #5a52e0);
             color: white; border: none; border-radius: var(--radius); font-family: var(--font);
             font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+            box-shadow: 0 4px 16px var(--accent-glow);
         }
         .btn-generate:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
-        .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-        .progress-container { margin-top: 28px; display: none; }
-        .progress-container.active { display: block; }
-        .progress-bar-track { width: 100%; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
-        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; width: 0%; transition: width 0.5s ease; }
+        /* ── Progress ── */
+        .progress-container { margin-top: 32px; display: none; }
+        .progress-container.active { display: block; animation: fadeSlideIn 0.4s ease; }
 
-        .progress-stages { display: flex; flex-direction: column; gap: 10px; }
-        .stage-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-dim); transition: color 0.3s; }
-        .stage-item.active { color: var(--accent-light); font-weight: 600; }
+        .progress-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .progress-pct { font-size: 28px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+        .progress-label { font-size: 13px; color: var(--text-dim); font-weight: 500; }
+
+        .progress-bar-track { width: 100%; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; margin-bottom: 24px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06); }
+        .progress-bar-fill {
+            height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 4px;
+            width: 0%; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); position: relative;
+        }
+        .progress-bar-fill::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        .progress-stages { display: flex; flex-direction: column; gap: 6px; }
+        .stage-item {
+            display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text-dim);
+            padding: 10px 14px; border-radius: 10px; transition: all 0.35s; background: transparent;
+        }
+        .stage-item.active { color: var(--accent); font-weight: 600; background: var(--accent-glow); }
         .stage-item.done { color: var(--green); }
-        .stage-item.error { color: var(--danger); }
-        .stage-icon {
-            width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2);
-            display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; transition: all 0.3s;
-        }
-        .stage-item.active .stage-icon { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); animation: pulse-glow 1.5s ease-in-out infinite; }
-        .stage-item.done .stage-icon { background: var(--green); }
-        .stage-item.error .stage-icon { background: var(--danger); }
-        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 12px var(--accent-glow); } 50% { box-shadow: 0 0 24px var(--accent-glow); } }
+        .stage-item.error { color: var(--danger); background: rgba(239,68,68,0.06); }
 
-        .panel-preview { background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
-        .preview-header {
-            padding: 20px 28px; display: flex; align-items: center; justify-content: space-between;
-            border-bottom: 1px solid var(--border); flex-shrink: 0;
+        .stage-icon {
+            width: 28px; height: 28px; border-radius: 8px; background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+            flex-shrink: 0; transition: all 0.35s; color: var(--text-dim);
         }
-        .preview-header h3 { font-size: 16px; color: var(--text-dim); font-weight: 600; }
+        .stage-item.active .stage-icon { background: var(--accent); color: white; animation: pulse-icon 1.5s ease-in-out infinite; }
+        .stage-item.done .stage-icon { background: var(--green); color: white; }
+        .stage-item.error .stage-icon { background: var(--danger); color: white; }
+
+        .stage-item.done .stage-icon::after { content: '\2713'; }
+        .stage-item.error .stage-icon::after { content: '\2717'; }
+        .stage-item.done .stage-num, .stage-item.error .stage-num { display: none; }
+
+        .stage-spinner {
+            display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite;
+        }
+        .stage-item.active .stage-spinner { display: block; }
+        .stage-item.active .stage-num { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes pulse-icon { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        @keyframes fadeSlideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Left Panel (Preview) ── */
+        .panel-preview { background: var(--surface-2); display: flex; flex-direction: column; overflow: hidden; }
+        .preview-header {
+            padding: 16px 28px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface);
+        }
+        .preview-header h3 { font-size: 15px; color: var(--text-dim); font-weight: 600; }
         .btn-action {
-            padding: 10px 20px; border-radius: 10px; font-family: var(--font); font-size: 14px;
+            padding: 10px 22px; border-radius: 10px; font-family: var(--font); font-size: 14px;
             font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; display: flex; align-items: center; gap: 8px;
         }
-        .btn-download { background: linear-gradient(135deg, var(--green), #27ae60); color: white; }
-        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,204,113,0.35); }
-        .btn-download:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-download { background: var(--green); color: white; box-shadow: 0 2px 8px rgba(16,185,129,0.25); }
+        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16,185,129,0.35); }
+        .btn-download:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .preview-frame-wrapper { flex: 1; overflow: hidden; position: relative; }
+        .preview-frame-wrapper { flex: 1; overflow: hidden; position: relative; margin: 16px; border-radius: 12px; box-shadow: var(--shadow-md); }
         .preview-empty {
             position: absolute; inset: 0; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: var(--text-dim); gap: 16px; transition: opacity 0.4s;
+            align-items: center; justify-content: center; color: var(--text-dim); gap: 16px;
+            transition: opacity 0.4s; background: var(--surface); border-radius: 12px;
         }
         .preview-empty.hidden { opacity: 0; pointer-events: none; }
-        .preview-empty-icon { width: 80px; height: 80px; border-radius: 20px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .preview-empty-icon {
+            width: 80px; height: 80px; border-radius: 20px; background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center; font-size: 36px;
+        }
         .preview-empty p { font-size: 15px; text-align: center; line-height: 1.7; }
-        iframe { width: 100%; height: 100%; border: none; background: white; opacity: 0; transition: opacity 0.5s; }
+        iframe { width: 100%; height: 100%; border: none; background: white; opacity: 0; transition: opacity 0.5s; border-radius: 12px; }
         iframe.loaded { opacity: 1; }
 
+        /* ── Toast ── */
         .toast {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
             background: var(--danger); color: white; padding: 14px 28px; border-radius: 12px;
             font-size: 15px; font-weight: 600; z-index: 1000; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-            max-width: 500px; text-align: center; box-shadow: 0 8px 30px rgba(231,76,60,0.4);
+            max-width: 500px; text-align: center; box-shadow: 0 8px 30px rgba(239,68,68,0.3);
         }
         .toast.show { transform: translateX(-50%) translateY(0); }
 
@@ -125,6 +181,7 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c0c4d0; }
     </style>
 </head>
 <body>
@@ -158,13 +215,17 @@
                 <span class="btn-text">&#9889; יצירת ניוזלטר</span>
             </button>
             <div class="progress-container" id="progressContainer">
+                <div class="progress-header">
+                    <span class="progress-pct" id="progressPct">0%</span>
+                    <span class="progress-label" id="progressLabel">מתחיל...</span>
+                </div>
                 <div class="progress-bar-track"><div class="progress-bar-fill" id="progressBar"></div></div>
                 <div class="progress-stages" id="stageList">
-                    <div class="stage-item" data-stage="research"><span class="stage-icon">1</span><span>מחקר ואיסוף מידע</span></div>
-                    <div class="stage-item" data-stage="content"><span class="stage-icon">2</span><span>יצירת תוכן</span></div>
-                    <div class="stage-item" data-stage="hebrew"><span class="stage-icon">3</span><span>בדיקת איכות עברית</span></div>
-                    <div class="stage-item" data-stage="visuals"><span class="stage-icon">4</span><span>יוצר מדיה וגרפים</span></div>
-                    <div class="stage-item" data-stage="render"><span class="stage-icon">5</span><span>הרכבת הניוזלטר</span></div>
+                    <div class="stage-item" data-stage="research"><span class="stage-icon"><span class="stage-num">1</span><span class="stage-spinner"></span></span><span>מחקר ואיסוף מידע</span></div>
+                    <div class="stage-item" data-stage="content"><span class="stage-icon"><span class="stage-num">2</span><span class="stage-spinner"></span></span><span>יצירת תוכן</span></div>
+                    <div class="stage-item" data-stage="hebrew"><span class="stage-icon"><span class="stage-num">3</span><span class="stage-spinner"></span></span><span>בדיקת איכות עברית</span></div>
+                    <div class="stage-item" data-stage="visuals"><span class="stage-icon"><span class="stage-num">4</span><span class="stage-spinner"></span></span><span>יוצר מדיה וגרפים</span></div>
+                    <div class="stage-item" data-stage="render"><span class="stage-icon"><span class="stage-num">5</span><span class="stage-spinner"></span></span><span>הרכבת הניוזלטר</span></div>
                 </div>
             </div>
         </div>
@@ -195,6 +256,8 @@
         const btnGenerate = document.getElementById('btnGenerate');
         const progressContainer = document.getElementById('progressContainer');
         const progressBar = document.getElementById('progressBar');
+        const progressPct = document.getElementById('progressPct');
+        const progressLabel = document.getElementById('progressLabel');
         const stageList = document.getElementById('stageList');
         const previewEmpty = document.getElementById('previewEmpty');
         const previewFrame = document.getElementById('previewFrame');
@@ -204,6 +267,15 @@
         let generatedHtml = null;
         const stageOrder = ['research','content','hebrew','visuals','render'];
         const stageMap = { research:0, content:1, hebrew:2, visuals:3, render:4, done:5 };
+        const stageLabels = {
+            research: 'מחפש מידע רלוונטי...',
+            content: 'כותב תוכן מקצועי...',
+            hebrew: 'בודק ומתקן עברית...',
+            visuals: 'יוצר תמונות וגרפים...',
+            render: 'מרכיב את הניוזלטר...',
+            done: 'הניוזלטר מוכן!'
+        };
+        const stagePcts = { research: 15, content: 40, hebrew: 55, visuals: 75, render: 90, done: 100 };
 
         topicInput.addEventListener('input', () => { charCount.textContent = topicInput.value.length; });
 
@@ -227,14 +299,20 @@
 
         function setStage(stage) {
             const idx = stageMap[stage] ?? -1;
+            const pct = stagePcts[stage] || 0;
+
             stageList.querySelectorAll('.stage-item').forEach((el, i) => {
                 el.classList.remove('active','done','error');
                 if (i < idx) el.classList.add('done');
                 else if (i === idx) el.classList.add('active');
             });
-            if (stage === 'done') stageList.querySelectorAll('.stage-item').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
-            const pcts = { research: 15, content: 40, hebrew: 55, visuals: 75, render: 90, done: 100 };
-            progressBar.style.width = (pcts[stage] || 0) + '%';
+            if (stage === 'done') {
+                stageList.querySelectorAll('.stage-item').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+            }
+
+            progressBar.style.width = pct + '%';
+            progressPct.textContent = pct + '%';
+            progressLabel.textContent = stageLabels[stage] || '';
         }
 
         async function startGeneration() {
@@ -248,6 +326,8 @@
             previewEmpty.classList.remove('hidden');
             progressContainer.classList.add('active');
             progressBar.style.width = '0%';
+            progressPct.textContent = '0%';
+            progressLabel.textContent = 'מתחיל...';
             resetStages();
 
             try {
