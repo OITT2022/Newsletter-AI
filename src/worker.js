@@ -56,8 +56,8 @@ async function searchTopic(topic, apiKey) {
 }
 
 function formatResearch(results) {
-  // Limit total research text to ~5000 chars to stay within API rate limits
-  const maxTotal = 5000;
+  // Limit total research text to ~3000 chars to stay within API rate limits
+  const maxTotal = 3000;
   let total = 0;
   const lines = [];
   for (let i = 0; i < results.length && total < maxTotal; i++) {
@@ -71,7 +71,7 @@ function formatResearch(results) {
 }
 
 // ── Anthropic API ──────────────────────────────────────────────────────────
-async function callClaude(systemPrompt, userPrompt, apiKey, maxTokens = 2048, model = "claude-haiku-4-5-20251001") {
+async function callClaude(systemPrompt, userPrompt, apiKey, maxTokens = 4096, model = "claude-sonnet-4-20250514") {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -176,6 +176,9 @@ ${sections}
 </td></tr></table></td></tr></table></body></html>`;
 }
 
+// ── Delay (respect rate limits) ─────────────────────────────────────────────
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 // ── SSE ────────────────────────────────────────────────────────────────────
 function sseEvent(event, data) {
   return `event: ${event}\ndata: ${String(data).replace(/\n/g, "\ndata: ")}\n\n`;
@@ -207,6 +210,8 @@ export default {
 
           await send("stage", "content");
           let content = await generateContent(topic, formatResearch(results), env.ANTHROPIC_API_KEY);
+
+          await delay(5000); // Wait 5s to respect rate limits between calls
 
           await send("stage", "hebrew");
           content = await checkHebrew(content, env.ANTHROPIC_API_KEY);
