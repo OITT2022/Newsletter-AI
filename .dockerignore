@@ -1,7 +1,8 @@
+.tmp/
+.git/
 .env
 credentials.json
 token.json
-.tmp/
 __pycache__/
 *.pyc
 .claude/
