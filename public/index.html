@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter AI</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --bg: #0f0f1a; --surface: #1a1a2e; --surface-2: #22223a;
+            --border: #2d2d4a; --accent: #6c63ff; --accent-glow: rgba(108,99,255,0.35);
+            --accent-light: #8b83ff; --green: #2ecc71; --text: #e8e8f0;
+            --text-dim: #9999b3; --danger: #e74c3c; --radius: 14px;
+            --font: 'Segoe UI', Arial, 'Arial Hebrew', sans-serif;
+        }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+        .app { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr; height: 100vh; }
+
+        .topbar {
+            grid-column: 1 / -1; background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; z-index: 10;
+        }
+        .topbar-brand { display: flex; align-items: center; gap: 14px; }
+        .topbar-logo {
+            width: 36px; height: 36px; background: var(--accent); border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+        .topbar-title {
+            font-size: 20px; font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-light), var(--green));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .topbar-subtitle { font-size: 13px; color: var(--text-dim); }
+
+        .panel-input {
+            background: var(--bg); padding: 40px 36px; display: flex;
+            flex-direction: column; overflow-y: auto; border-left: 1px solid var(--border);
+        }
+        .panel-input h2 { font-size: 22px; margin-bottom: 8px; }
+        .panel-input .hint { font-size: 14px; color: var(--text-dim); margin-bottom: 28px; line-height: 1.7; }
+
+        .input-group { position: relative; margin-bottom: 24px; }
+        .input-group label { display: block; font-size: 14px; font-weight: 600; color: var(--text-dim); margin-bottom: 10px; }
+        textarea {
+            width: 100%; min-height: 160px; background: var(--surface); border: 2px solid var(--border);
+            border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 16px;
+            line-height: 1.8; padding: 18px 20px; resize: vertical; transition: border-color 0.25s, box-shadow 0.25s; direction: rtl;
+        }
+        textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
+        textarea::placeholder { color: var(--text-dim); opacity: 0.6; }
+        .char-count { position: absolute; bottom: 12px; left: 16px; font-size: 12px; color: var(--text-dim); }
+
+        .suggestions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+        .suggestion-chip {
+            background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px;
+            padding: 8px 16px; font-size: 13px; color: var(--text-dim); cursor: pointer; transition: all 0.2s;
+        }
+        .suggestion-chip:hover { background: var(--accent); color: white; border-color: var(--accent); transform: translateY(-1px); }
+
+        .btn-generate {
+            width: 100%; padding: 18px; background: linear-gradient(135deg, var(--accent), #5a52e0);
+            color: white; border: none; border-radius: var(--radius); font-family: var(--font);
+            font-size: 17px; font-weight: 700; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;
+        }
+        .btn-generate:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 30px var(--accent-glow); }
+        .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .progress-container { margin-top: 28px; display: none; }
+        .progress-container.active { display: block; }
+        .progress-bar-track { width: 100%; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 14px; }
+        .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; width: 0%; transition: width 0.5s ease; }
+
+        .progress-stages { display: flex; flex-direction: column; gap: 10px; }
+        .stage-item { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-dim); transition: color 0.3s; }
+        .stage-item.active { color: var(--accent-light); font-weight: 600; }
+        .stage-item.done { color: var(--green); }
+        .stage-item.error { color: var(--danger); }
+        .stage-icon {
+            width: 22px; height: 22px; border-radius: 50%; background: var(--surface-2);
+            display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; transition: all 0.3s;
+        }
+        .stage-item.active .stage-icon { background: var(--accent); box-shadow: 0 0 12px var(--accent-glow); animation: pulse-glow 1.5s ease-in-out infinite; }
+        .stage-item.done .stage-icon { background: var(--green); }
+        .stage-item.error .stage-icon { background: var(--danger); }
+        @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 12px var(--accent-glow); } 50% { box-shadow: 0 0 24px var(--accent-glow); } }
+
+        .panel-preview { background: var(--surface); display: flex; flex-direction: column; overflow: hidden; }
+        .preview-header {
+            padding: 20px 28px; display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border); flex-shrink: 0;
+        }
+        .preview-header h3 { font-size: 16px; color: var(--text-dim); font-weight: 600; }
+        .btn-action {
+            padding: 10px 20px; border-radius: 10px; font-family: var(--font); font-size: 14px;
+            font-weight: 600; cursor: pointer; transition: all 0.25s; border: none; display: flex; align-items: center; gap: 8px;
+        }
+        .btn-download { background: linear-gradient(135deg, var(--green), #27ae60); color: white; }
+        .btn-download:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(46,204,113,0.35); }
+        .btn-download:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .preview-frame-wrapper { flex: 1; overflow: hidden; position: relative; }
+        .preview-empty {
+            position: absolute; inset: 0; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; color: var(--text-dim); gap: 16px; transition: opacity 0.4s;
+        }
+        .preview-empty.hidden { opacity: 0; pointer-events: none; }
+        .preview-empty-icon { width: 80px; height: 80px; border-radius: 20px; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 36px; }
+        .preview-empty p { font-size: 15px; text-align: center; line-height: 1.7; }
+        iframe { width: 100%; height: 100%; border: none; background: white; opacity: 0; transition: opacity 0.5s; }
+        iframe.loaded { opacity: 1; }
+
+        .toast {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px);
+            background: var(--danger); color: white; padding: 14px 28px; border-radius: 12px;
+            font-size: 15px; font-weight: 600; z-index: 1000; transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+            max-width: 500px; text-align: center; box-shadow: 0 8px 30px rgba(231,76,60,0.4);
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        @media (max-width: 900px) {
+            .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr 1fr; }
+            .panel-input { border-left: none; border-bottom: 1px solid var(--border); }
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="topbar">
+            <div class="topbar-brand">
+                <div class="topbar-logo">N</div>
+                <div>
+                    <div class="topbar-title">Newsletter AI</div>
+                    <div class="topbar-subtitle">יצירת ניוזלטרים מקצועיים בלחיצת כפתור</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="panel-input">
+            <h2>מה הנושא?</h2>
+            <p class="hint">תאר את הנושא של הניוזלטר. ככל שתפרט יותר, כך התוצאה תהיה מדויקת ומעניינת יותר.</p>
+            <div class="input-group">
+                <label>נושא הניוזלטר</label>
+                <textarea id="topicInput" placeholder="למשל: מגמות בינה מלאכותית ברפואה ב-2026, או: טיפים לגידול עציצים במרפסת..." maxlength="500"></textarea>
+                <span class="char-count"><span id="charCount">0</span> / 500</span>
+            </div>
+            <div class="suggestions">
+                <div class="suggestion-chip" data-topic="מגמות בינה מלאכותית בעולם העסקי 2026">AI בעסקים</div>
+                <div class="suggestion-chip" data-topic="גידול עציצים במרפסת - טיפים וצמחים מומלצים">גידול עציצים</div>
+                <div class="suggestion-chip" data-topic="שוק הנדל&quot;ן המסחרי בארה&quot;ב - ניתוח עסקאות ומגמות">נדל"ן מסחרי</div>
+                <div class="suggestion-chip" data-topic="טכנולוגיות פינטק שמשנות את עולם הבנקאות">פינטק</div>
+                <div class="suggestion-chip" data-topic="חדשנות בתחום האנרגיה המתחדשת ואנרגיה סולארית">אנרגיה ירוקה</div>
+            </div>
+            <button class="btn-generate" id="btnGenerate" onclick="startGeneration()">
+                <span class="btn-text">&#9889; יצירת ניוזלטר</span>
+            </button>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar-track"><div class="progress-bar-fill" id="progressBar"></div></div>
+                <div class="progress-stages" id="stageList">
+                    <div class="stage-item" data-stage="research"><span class="stage-icon">1</span><span>מחקר ואיסוף מידע</span></div>
+                    <div class="stage-item" data-stage="content"><span class="stage-icon">2</span><span>יצירת תוכן</span></div>
+                    <div class="stage-item" data-stage="hebrew"><span class="stage-icon">3</span><span>בדיקת איכות עברית</span></div>
+                    <div class="stage-item" data-stage="render"><span class="stage-icon">4</span><span>הרכבת הניוזלטר</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-preview">
+            <div class="preview-header">
+                <h3>תצוגה מקדימה</h3>
+                <div class="preview-actions">
+                    <button class="btn-action btn-download" id="btnDownload" disabled onclick="downloadNewsletter()">
+                        <span>&#11015;</span><span>הורדה לשליחה</span>
+                    </button>
+                </div>
+            </div>
+            <div class="preview-frame-wrapper">
+                <div class="preview-empty" id="previewEmpty">
+                    <div class="preview-empty-icon">&#128240;</div>
+                    <p>הניוזלטר שלך יופיע כאן<br>לאחר סיום העיבוד</p>
+                </div>
+                <iframe id="previewFrame" sandbox="allow-same-origin"></iframe>
+            </div>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const topicInput = document.getElementById('topicInput');
+        const charCount = document.getElementById('charCount');
+        const btnGenerate = document.getElementById('btnGenerate');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const stageList = document.getElementById('stageList');
+        const previewEmpty = document.getElementById('previewEmpty');
+        const previewFrame = document.getElementById('previewFrame');
+        const btnDownload = document.getElementById('btnDownload');
+        const toast = document.getElementById('toast');
+
+        let generatedHtml = null;
+        const stageOrder = ['research','content','hebrew','render'];
+        const stageMap = { research:0, content:1, hebrew:2, render:3, done:4 };
+
+        topicInput.addEventListener('input', () => { charCount.textContent = topicInput.value.length; });
+
+        document.querySelectorAll('.suggestion-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                topicInput.value = chip.dataset.topic;
+                charCount.textContent = topicInput.value.length;
+                topicInput.focus();
+            });
+        });
+
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 5000);
+        }
+
+        function resetStages() {
+            stageList.querySelectorAll('.stage-item').forEach(el => el.classList.remove('active','done','error'));
+        }
+
+        function setStage(stage) {
+            const idx = stageMap[stage] ?? -1;
+            stageList.querySelectorAll('.stage-item').forEach((el, i) => {
+                el.classList.remove('active','done','error');
+                if (i < idx) el.classList.add('done');
+                else if (i === idx) el.classList.add('active');
+            });
+            if (stage === 'done') stageList.querySelectorAll('.stage-item').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+            const pcts = { research: 20, content: 50, hebrew: 70, render: 90, done: 100 };
+            progressBar.style.width = (pcts[stage] || 0) + '%';
+        }
+
+        async function startGeneration() {
+            const topic = topicInput.value.trim();
+            if (!topic) { showToast('נא להזין נושא לניוזלטר'); return; }
+
+            btnGenerate.disabled = true;
+            btnDownload.disabled = true;
+            generatedHtml = null;
+            previewFrame.classList.remove('loaded');
+            previewEmpty.classList.remove('hidden');
+            progressContainer.classList.add('active');
+            progressBar.style.width = '0%';
+            resetStages();
+
+            try {
+                const evtSource = new EventSource('/api/generate?topic=' + encodeURIComponent(topic));
+
+                evtSource.addEventListener('stage', (e) => setStage(e.data));
+
+                evtSource.addEventListener('result', (e) => {
+                    evtSource.close();
+                    generatedHtml = e.data;
+                    setStage('done');
+                    btnGenerate.disabled = false;
+                    btnDownload.disabled = false;
+                    previewFrame.srcdoc = generatedHtml;
+                    previewFrame.onload = () => {
+                        previewFrame.classList.add('loaded');
+                        previewEmpty.classList.add('hidden');
+                    };
+                });
+
+                evtSource.addEventListener('error_msg', (e) => {
+                    evtSource.close();
+                    showToast(e.data || 'שגיאה בעיבוד');
+                    btnGenerate.disabled = false;
+                    const active = stageList.querySelector('.stage-item.active');
+                    if (active) { active.classList.remove('active'); active.classList.add('error'); }
+                });
+
+                evtSource.onerror = () => {
+                    evtSource.close();
+                    showToast('שגיאת תקשורת עם השרת');
+                    btnGenerate.disabled = false;
+                };
+            } catch (e) {
+                showToast('שגיאה: ' + e.message);
+                btnGenerate.disabled = false;
+            }
+        }
+
+        function downloadNewsletter() {
+            if (!generatedHtml) return;
+            const blob = new Blob([generatedHtml], { type: 'text/html; charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'newsletter_' + new Date().toISOString().slice(0,10) + '.html';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        topicInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!btnGenerate.disabled) startGeneration(); }
+        });
+    </script>
+</body>
+</html>
