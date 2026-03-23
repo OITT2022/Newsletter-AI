@@ -1,3 +1,6 @@
 name = "newsletter-ai"
+main = "src/worker.js"
 compatibility_date = "2024-12-01"
-pages_build_output_dir = "public"
+
+[assets]
+directory = "./public"
